@@ -16,7 +16,7 @@ cd code && python3 main.py \
 --gradient_checkpointing True \
 --text_keys '[\"title\",\"description\"]' \
 --train_batch_size 4 \
---text_path $CUR_DIR/information \
+--text_path $CUR_DIR/HLLM/information \
 --item_pretrain_dir $CUR_DIR/zoo/Qwen3-0.6B \
 --user_pretrain_dir $CUR_DIR/zoo/Qwen3-0.6B \
 --num_negatives 64
