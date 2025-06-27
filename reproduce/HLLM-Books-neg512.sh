@@ -3,7 +3,7 @@
 
 # 1B: 16 H100s for ≈ 2days
 cd .. && CUR_DIR=$(pwd)
-
+cd HLLM
 cd code && python3 main.py \
 --config_file overall/LLM_deepspeed.yaml HLLM/HLLM.yaml \
 --MAX_ITEM_LIST_LENGTH 25 \
