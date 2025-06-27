@@ -25,7 +25,6 @@ from REC.utils.enum_type import InputType
 from REC.model.basemodel import BaseModel, all_gather
 from REC.model.HLLM.modeling_llama import LlamaForCausalLM
 from REC.model.HLLM.modeling_mistral import MistralForCausalLM
-from REC.model.HLLM.modeling_bert import BertModel
 from REC.model.HLLM.baichuan.modeling_baichuan import BaichuanForCausalLM
 from REC.model.HLLM.modeling_qwen3 import Qwen3ForCausalLM
 
@@ -102,14 +101,6 @@ class HLLM(BaseModel):
                 return MistralForCausalLM.from_pretrained(pretrain_dir, config=hf_config)
             else:
                 return MistralForCausalLM(config=hf_config).cuda()
-        elif isinstance(hf_config, transformers.BertConfig):
-            hf_config.use_ft_flash_attn = self.use_ft_flash_attn
-            self.logger.info(f'Using flash attention {hf_config.use_ft_flash_attn} for bert')
-            self.logger.info(f'Init {init} for bert')
-            if init:
-                return BertModel.from_pretrained(pretrain_dir, config=hf_config)
-            else:
-                return BertModel(config=hf_config).cuda()
         elif getattr(hf_config, "model_type", None) == "baichuan":
             hf_config.use_ft_flash_attn = self.use_ft_flash_attn
             self.logger.info(f'Using flash attention {hf_config.use_ft_flash_attn} for baichuan')
@@ -197,7 +188,6 @@ class HLLM(BaseModel):
         N, S = user_attention_mask.shape
         pos_input_ids, pos_cu_input_lens, pos_position_ids = interaction['pos_input_ids'], interaction['pos_cu_input_lens'], interaction['pos_position_ids']
         neg_input_ids, neg_cu_input_lens, neg_position_ids = interaction['neg_input_ids'], interaction['neg_cu_input_lens'], interaction['neg_position_ids']
-
         pos_embedding = self.forward_item_emb(pos_input_ids, pos_position_ids, pos_cu_input_lens, self.item_emb_token_n, self.item_emb_tokens, self.item_llm)
         pos_embedding = pos_embedding.reshape(N, S+1, -1)
         neg_embedding = self.forward_item_emb(neg_input_ids, neg_position_ids, neg_cu_input_lens, self.item_emb_token_n, self.item_emb_tokens, self.item_llm)

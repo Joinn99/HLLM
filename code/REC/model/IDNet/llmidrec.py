@@ -23,7 +23,6 @@ from logging import getLogger
 from REC.utils.enum_type import InputType
 from REC.model.basemodel import BaseModel, all_gather
 from REC.model.HLLM.modeling_llama import LlamaForCausalLM
-from REC.model.HLLM.modeling_bert import BertModel
 from REC.model.HLLM.modeling_qwen3 import Qwen3ForCausalLM
 
 
@@ -76,14 +75,6 @@ class LLMIDRec(BaseModel):
                 return LlamaForCausalLM.from_pretrained(pretrain_dir, config=hf_config)
             else:
                 return LlamaForCausalLM(config=hf_config).bfloat16()
-        elif isinstance(hf_config, transformers.BertConfig):
-            hf_config.use_ft_flash_attn = self.use_ft_flash_attn
-            self.logger.info(f'Using flash attention {hf_config.use_ft_flash_attn} for bert')
-            self.logger.info(f'Init {init} for bert')
-            if init:
-                return BertModel.from_pretrained(pretrain_dir, config=hf_config)
-            else:
-                return BertModel(config=hf_config).bfloat16()
         elif isinstance(hf_config, transformers.Qwen3Config):
             hf_config.use_ft_flash_attn = self.use_ft_flash_attn
             self.logger.info(f'Using flash attention {hf_config.use_ft_flash_attn} for qwen3')
