@@ -18,15 +18,15 @@ import torch.nn.functional as F
 import torch.distributed as dist
 import numpy as np
 import transformers
-from transformers import AutoConfig, AutoModelForCausalLM
+from transformers import AutoConfig, AutoModel
 from logging import getLogger
 
 from REC.utils.enum_type import InputType
 from REC.model.basemodel import BaseModel, all_gather
-from REC.model.HLLM.modeling_llama import LlamaForCausalLM
-from REC.model.HLLM.modeling_mistral import MistralForCausalLM
-from REC.model.HLLM.baichuan.modeling_baichuan import BaichuanForCausalLM
-from REC.model.HLLM.modeling_qwen3 import Qwen3ForCausalLM
+from REC.model.HLLM.modeling_llama import LlamaModel
+from REC.model.HLLM.modeling_mistral import MistralModel
+from REC.model.HLLM.baichuan.modeling_baichuan import BaichuanModel
+from REC.model.HLLM.modeling_qwen3 import Qwen3Model
 
 
 class HLLM(BaseModel):
@@ -44,6 +44,10 @@ class HLLM(BaseModel):
         self.item_llm = self.create_llm(self.item_pretrain_dir, config['item_llm_init'])
         self.logger.info(f"create user llm")
         self.user_llm = self.create_llm(self.user_pretrain_dir, config['user_llm_init'])
+
+        self.user_llm.layers = nn.ModuleList([self.user_llm.layers[0], self.user_llm.layers[-1]])
+        self.user_llm.embed_tokens = None
+
         self.item_emb_token_n = config['item_emb_token_n']
         if self.item_emb_token_n > 1:
             raise NotImplementedError(f"Not support item_emb_token_n {self.item_emb_token_n} > 1")
@@ -90,35 +94,35 @@ class HLLM(BaseModel):
             self.logger.info(f'Using flash attention {hf_config.use_ft_flash_attn} for llama')
             self.logger.info(f'Init {init} for llama')
             if init:
-                return LlamaForCausalLM.from_pretrained(pretrain_dir, config=hf_config)
+                return LlamaModel.from_pretrained(pretrain_dir, config=hf_config)
             else:
-                return LlamaForCausalLM(config=hf_config).cuda()
+                return LlamaModel(config=hf_config).cuda()
         elif isinstance(hf_config, transformers.MistralConfig):
             hf_config.use_ft_flash_attn = self.use_ft_flash_attn
             self.logger.info(f'Using flash attention {hf_config.use_ft_flash_attn} for mistral')
             self.logger.info(f'Init {init} for mistral')
             if init:
-                return MistralForCausalLM.from_pretrained(pretrain_dir, config=hf_config)
+                return MistralModel.from_pretrained(pretrain_dir, config=hf_config)
             else:
-                return MistralForCausalLM(config=hf_config).cuda()
+                return MistralModel(config=hf_config).cuda()
         elif getattr(hf_config, "model_type", None) == "baichuan":
             hf_config.use_ft_flash_attn = self.use_ft_flash_attn
             self.logger.info(f'Using flash attention {hf_config.use_ft_flash_attn} for baichuan')
             self.logger.info(f'Init {init} for baichuan')
             if init:
-                return BaichuanForCausalLM.from_pretrained(pretrain_dir, config=hf_config)
+                return BaichuanModel.from_pretrained(pretrain_dir, config=hf_config)
             else:
-                return BaichuanForCausalLM(config=hf_config).cuda()
+                return BaichuanModel(config=hf_config).cuda()
         elif isinstance(hf_config, transformers.Qwen3Config):
             hf_config.use_ft_flash_attn = self.use_ft_flash_attn
             self.logger.info(f'Using flash attention {hf_config.use_ft_flash_attn} for qwen3')
             self.logger.info(f'Init {init} for qwen3')
             if init:
-                return Qwen3ForCausalLM.from_pretrained(pretrain_dir, config=hf_config)
+                return Qwen3Model.from_pretrained(pretrain_dir, config=hf_config)
             else:
-                return Qwen3ForCausalLM(config=hf_config).cuda()
+                return Qwen3Model(config=hf_config).cuda()
         else:
-            return AutoModelForCausalLM.from_pretrained(
+            return AutoModel.from_pretrained(
                 self.local_dir, config=hf_config
             )
 

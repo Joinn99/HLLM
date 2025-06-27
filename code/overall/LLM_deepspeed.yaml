@@ -45,4 +45,4 @@ stopping_step: 5
 
 strategy: deepspeed
 precision: bf16-mixed
-stage: 2
+stage: 0
