@@ -27,7 +27,7 @@ epochs: 10
 train_batch_size: 8
 optim_args: {
   learning_rate: 1e-4,
-  weight_decay: 0.01
+  weight_decay: 0.005
 }
 scheduler_args: {
   type: cosine,
