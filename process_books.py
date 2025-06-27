@@ -14,7 +14,9 @@
 # limitations under the License.
 
 import pandas as pd
-
+import argparse
+from tqdm import tqdm
+import gzip
 
 def preprocess_interaction(intercation_path, output_path, prefix='books'):
     ratings = pd.read_csv(
@@ -62,7 +64,7 @@ def preprocess_interaction(intercation_path, output_path, prefix='books'):
 
 def preprocess_item(item_path, output_path, prefix='books'):
     data = []
-    for line in open(item_path):
+    for line in tqdm(gzip.open(item_path, 'r')):
         json_data = eval(line)
         item_id = json_data.get('asin', '')
         description = json_data.get('description', '')
@@ -79,5 +81,11 @@ def preprocess_item(item_path, output_path, prefix='books'):
 
 
 if __name__ == '__main__':
-    preprocess_interaction("ratings_Books.csv", "amazon_books.csv")
-    preprocess_item("meta_Books.json", "amazon_books_item.csv")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file_path", type=str, default="/data")
+    parser.add_argument("--domain", type=str, default="Video_Games")
+    args = parser.parse_args()
+    file_path = args.file_path
+    domain = args.domain
+    preprocess_interaction(f"{file_path}/ratings_{domain}.csv", f"dataset/amazon_{domain}.csv", domain)
+    preprocess_item(f"{file_path}/meta_{domain}.json.gz", f"information/amazon_{domain}.csv", domain)
