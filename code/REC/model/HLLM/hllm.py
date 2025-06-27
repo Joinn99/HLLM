@@ -27,6 +27,7 @@ from REC.model.HLLM.modeling_llama import LlamaForCausalLM
 from REC.model.HLLM.modeling_mistral import MistralForCausalLM
 from REC.model.HLLM.modeling_bert import BertModel
 from REC.model.HLLM.baichuan.modeling_baichuan import BaichuanForCausalLM
+from REC.model.HLLM.modeling_qwen3 import Qwen3ForCausalLM
 
 
 class HLLM(BaseModel):
@@ -117,6 +118,14 @@ class HLLM(BaseModel):
                 return BaichuanForCausalLM.from_pretrained(pretrain_dir, config=hf_config)
             else:
                 return BaichuanForCausalLM(config=hf_config).cuda()
+        elif isinstance(hf_config, transformers.Qwen3Config):
+            hf_config.use_ft_flash_attn = self.use_ft_flash_attn
+            self.logger.info(f'Using flash attention {hf_config.use_ft_flash_attn} for qwen3')
+            self.logger.info(f'Init {init} for qwen3')
+            if init:
+                return Qwen3ForCausalLM.from_pretrained(pretrain_dir, config=hf_config)
+            else:
+                return Qwen3ForCausalLM(config=hf_config).cuda()
         else:
             return AutoModelForCausalLM.from_pretrained(
                 self.local_dir, config=hf_config

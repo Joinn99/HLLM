@@ -24,6 +24,7 @@ from REC.utils.enum_type import InputType
 from REC.model.basemodel import BaseModel, all_gather
 from REC.model.HLLM.modeling_llama import LlamaForCausalLM
 from REC.model.HLLM.modeling_bert import BertModel
+from REC.model.HLLM.modeling_qwen3 import Qwen3ForCausalLM
 
 
 class LLMIDRec(BaseModel):
@@ -83,6 +84,14 @@ class LLMIDRec(BaseModel):
                 return BertModel.from_pretrained(pretrain_dir, config=hf_config)
             else:
                 return BertModel(config=hf_config).bfloat16()
+        elif isinstance(hf_config, transformers.Qwen3Config):
+            hf_config.use_ft_flash_attn = self.use_ft_flash_attn
+            self.logger.info(f'Using flash attention {hf_config.use_ft_flash_attn} for qwen3')
+            self.logger.info(f'Init {init} for qwen3')
+            if init:
+                return Qwen3ForCausalLM.from_pretrained(pretrain_dir, config=hf_config)
+            else:
+                return Qwen3ForCausalLM(config=hf_config).bfloat16()
         else:
             return AutoModelForCausalLM.from_pretrained(
                 self.local_dir, config=hf_config
