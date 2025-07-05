@@ -48,7 +48,7 @@ class SeqEvalDataset(Dataset):
         return vq_time
 
     def __getitem__(self, index):
-        last_num = 2 if self.phase == 'valid' else 1
+        last_num = 1 if self.phase == 'valid' else 1
         history_seq = self.user_seq[index][:-last_num]
         item_seq = self._padding_sequence(history_seq, self.max_item_list_length)
         item_target = self.user_seq[index][-last_num]

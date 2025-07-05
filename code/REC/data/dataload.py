@@ -102,7 +102,9 @@ class Data:
         item_list = self.inter_feat['item_id'].values
         timestamp_list = self.inter_feat['timestamp'].values
         grouped_index = self._grouped_index(user_list)
+        print(f"{len(grouped_index) = }")
 
+        # Evaluation
         user_seq = {}
         time_seq = {}
         for uid, index in grouped_index.items():
@@ -111,11 +113,34 @@ class Data:
 
         self.user_seq = user_seq
         self.time_seq = time_seq
+
+        # Filter out Evaluation Set
+        if self.config['eval_timestamp_start']:
+            self.logger.info(f"Filtering out interactions after {self.config['eval_timestamp_start']}, {len(self.inter_feat) = }")
+            self.inter_feat = self.inter_feat[self.inter_feat['timestamp'] < self.config['eval_timestamp_start']]
+            self.logger.info(f"After filtering, {len(self.inter_feat) = }")
+
+        # Filter out users if train_timestamp_start is set
+        if self.config['train_timestamp_start']:
+            self.logger.info(f"Filtering out users with last interaction before {self.config['train_timestamp_start']}")
+            user_last_timestamp = self.inter_feat.groupby('user_id')["timestamp"].agg("max")
+            self.logger.info(f"Users before filtering: {len(user_last_timestamp)}")
+            valid_users = user_last_timestamp[user_last_timestamp >= self.config['train_timestamp_start']].index
+            self.logger.info(f"Users after filtering: {len(valid_users)}")
+            self.inter_feat = self.inter_feat[self.inter_feat['user_id'].isin(valid_users)]
+            self.logger.info(f"After filtering, {len(self.inter_feat) = }")
+
+        self.sort(by='timestamp')
+        user_list = self.inter_feat['user_id'].values
+        item_list = self.inter_feat['item_id'].values
+        timestamp_list = self.inter_feat['timestamp'].values
+        grouped_index = self._grouped_index(user_list)
+        # Training
         train_feat = dict()
         indices = []
 
         for index in grouped_index.values():
-            indices.extend(list(index)[:-2])
+            indices.extend(list(index))#[:-2]) [EXCLUDE LAST 2 FOR LEAVE-ONE-OUT TESTING, DISABLED WHEN TIMESTAMP IS USED]
         for k in self.inter_feat:
             train_feat[k] = self.inter_feat[k].values[indices]
 
