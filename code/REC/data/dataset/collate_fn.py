@@ -33,13 +33,20 @@ def customize_collate(batch):
     elem = batch[0]
     elem_type = type(elem)
     if isinstance(elem, torch.Tensor):
+        # Handle PyTorch tensor collation
         out = None
         if torch.utils.data.get_worker_info() is not None:
-            # If we're in a background process, concatenate directly into a
-            # shared memory tensor to avoid an extra copy
-            numel = sum(x.numel() for x in batch)
-            storage = elem.storage()._new_shared(numel)
-            out = elem.new(storage)
+            # If we're in a background process (DataLoader with num_workers > 0),
+            # we can optimize by concatenating directly into a shared memory tensor
+            # to avoid an extra copy operation between processes
+            numel = sum(x.numel() for x in batch)  # Total number of elements across all tensors
+            storage = elem.storage()._new_shared(numel)  # Create shared memory storage
+            out = elem.new(storage)  # Create new tensor using shared storage
+            # Resize the output tensor to zero elements to avoid deprecation warning
+            # This ensures the tensor can be properly resized to the final shape
+            out.resize_(0)
+        # Stack all tensors in the batch along dimension 0 (batch dimension)
+        # If 'out' is provided, the result will be stored in the pre-allocated tensor
         return torch.stack(batch, 0, out=out)
     elif (
         elem_type.__module__ == "numpy"
