@@ -116,7 +116,7 @@ class Data:
         self.time_seq = time_seq
 
         while self.inter_feat['timestamp'].max() > 10**10:
-            self.inter_feat['timestamp'] = self.inter_feat['timestamp'] // 10*3
+            self.inter_feat['timestamp'] = self.inter_feat['timestamp'] // 10**3
         # Filter out Evaluation Set
         if self.config['eval_timestamp_start']:
             self.logger.info(f"Filtering out interactions after {self.config['eval_timestamp_start']}, {len(self.inter_feat) = }")
