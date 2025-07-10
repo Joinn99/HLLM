@@ -21,6 +21,8 @@ from flash_attn.flash_attn_interface import (
     flash_attn_varlen_qkvpacked_func,
 )
 
+from transformers.modeling_flash_attention_utils import fa_peft_integration_check
+
 
 def flash_self_attention(
     qkv: torch.Tensor,
@@ -48,6 +50,7 @@ def flash_self_attention(
         out: (total, H, D) if cu_seqlens is not None and max_seqlen is not None,
             else (B, S, H, D).
     """
+
     assert qkv.dtype in [torch.float16, torch.bfloat16]
     assert qkv.is_cuda
     unpadded = cu_seqlens is not None
@@ -86,6 +89,15 @@ def compute_flash_attention(
     # q, k, v: [bs, seq_len, num_attention_heads, attn_head_size]
     # attention_mask (float): [bs, seq_len]
     batch_size, max_len = q.size(0), q.size(1)
+
+    target_dtype = None
+    if q.dtype == torch.float32:
+        if torch.is_autocast_enabled():
+            target_dtype = torch.get_autocast_gpu_dtype()
+        else:
+            target_dtype = q.dtype
+
+    q, k, v = fa_peft_integration_check(q, k, v, target_dtype=target_dtype)
 
     qkv = torch.stack([q, k, v], dim=2)  # [bs, seq_len, 3, num_attention_heads, attn_head_size]
 
@@ -142,3 +154,4 @@ def compute_flash_attention(
         ]
         out = torch.stack(padded_seqs)
         return out
+

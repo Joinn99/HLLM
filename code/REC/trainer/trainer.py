@@ -29,7 +29,7 @@ from REC.utils import ensure_dir, get_local_time, early_stopping, calculate_vali
 from REC.utils.lr_scheduler import *
 
 import lightning as L
-from lightning.fabric.strategies import DeepSpeedStrategy, DDPStrategy
+from lightning.fabric.strategies import DeepSpeedStrategy, SingleDeviceStrategy
 
 
 class Trainer(object):
@@ -324,7 +324,7 @@ class Trainer(object):
             self.lite = L.Fabric(accelerator='gpu', strategy=strategy, precision=precision, num_nodes=nnodes)
         else:
             self.logger.info(f"Use DDP strategy")
-            strategy = DDPStrategy(find_unused_parameters=True)
+            strategy = SingleDeviceStrategy(device=self.device, precision=precision)
             self.lite = L.Fabric(accelerator='gpu', strategy=strategy, precision=precision, num_nodes=nnodes)
         self.lite.launch()
         self.model, self.optimizer = self.lite.setup(self.model, self.optimizer)
@@ -459,8 +459,8 @@ class Trainer(object):
                 self.model, self.optimizer = self.lite.setup(self.model, self.optimizer)
             else:
                 self.logger.info(f"Use DDP strategy")
-                precision = self.config['precision'] if self.config['precision'] else '32'
-                strategy = DDPStrategy(find_unused_parameters=True)
+                precision = self.config['precision'] if self.config['precision'] else 'bf16-mixed'
+                strategy = SingleDeviceStrategy(device=self.device, precision=precision)
                 self.lite = L.Fabric(accelerator='gpu', strategy=strategy, precision=precision, num_nodes=nnodes)
                 self.lite.launch()
                 self.model = self.lite.setup(self.model)
