@@ -40,7 +40,7 @@ class Data:
         self._data_processing()
 
     def _load_inter_feat(self, token, dataset_path, item_data=None):
-        inter_feat_path = os.path.join(dataset_path, f'{token}.csv')
+        inter_feat_path = os.path.join(dataset_path, f'{token}.csv.gz')
         if not os.path.isfile(inter_feat_path):
             raise ValueError(f'File {inter_feat_path} not exist.')
 
@@ -51,7 +51,7 @@ class Data:
         self.inter_feat = df
 
         if item_data:
-            item_data_path = os.path.join(dataset_path, f'{item_data}.csv')
+            item_data_path = os.path.join(dataset_path, f'{item_data}.csv.gz')
             item_df = pd.read_csv(
                 item_data_path, delimiter=',', dtype={'item_id': str, 'user_id': str, 'timestamp': int}, header=0, names=['item_id', 'user_id', 'timestamp']
             )
