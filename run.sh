@@ -11,11 +11,11 @@ cd HLLM
 cd code && python3 main.py \
 --config_file overall/LLM_deepspeed.yaml HLLM/HLLM-${PHASE}.yaml \
 --MAX_ITEM_LIST_LENGTH 25 \
---epochs 5 \
+--epochs 3 \
 --optim_args.learning_rate 1e-4 \
 --checkpoint_dir $CUR_DIR/zoo/HLLM-${DOMAIN}-${PHASE} \
 --loss nce \
---MAX_TEXT_LENGTH 128 \
+--MAX_TEXT_LENGTH 64 \
 --dataset amazon_${DOMAIN} \
 --gradient_checkpointing True \
 --text_keys '[\"title\",\"description\"]' \
