@@ -14,7 +14,7 @@ import os
 import yaml
 from collections import Counter
 from logging import getLogger
-
+import logging
 import numpy as np
 import pandas as pd
 import torch
@@ -32,6 +32,7 @@ class Data:
         self.data_split = config['data_split']
         self.item_data = config['item_data']
         self.logger = getLogger()
+        self.logger.setLevel(logging.INFO)
         self._from_scratch()
 
     def _from_scratch(self):
