@@ -10,13 +10,13 @@ cd code && python3 main.py \
 --train_batch_size 8 \
 --MAX_ITEM_LIST_LENGTH 50 \
 --epochs 201 \
---dataset amazon_books \
---num_negatives 512 \
+--dataset amazon_Movies_and_TV \
+--num_negatives 64 \
 --item_embed_dim 512 \
 --show_progress True \
 --update_interval 100 \
 --fix_temp True \
 --optim_args.weight_decay 0.1 \
---user_pretrain_dir user_pretrain_dir \
---checkpoint_dir checkpoint_dir \
+--user_pretrain_dir /home/Data/zoo/TinyLlama-1.1B-intermediate-step-1431k-3T \
+--checkpoint_dir /home/Data/zoo/SASRec-1B-Books-neg512 \
 --stopping_step 10 
