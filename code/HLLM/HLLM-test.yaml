@@ -5,4 +5,5 @@ user_pretrain_dir: user_pretrain_dir
 user_llm_init: True
 use_ft_flash_attn: True
 
-train_timestamp_start: 1672531200
+train_timestamp_start: 1672531200 # 2023-01-01
+eval_timestamp_start: 1680307200 # 2023-04-01

@@ -102,18 +102,6 @@ class Data:
         user_list = self.inter_feat['user_id'].values
         item_list = self.inter_feat['item_id'].values
         timestamp_list = self.inter_feat['timestamp'].values
-        grouped_index = self._grouped_index(user_list)
-        print(f"{len(grouped_index) = }")
-
-        # Evaluation
-        user_seq = {}
-        time_seq = {}
-        for uid, index in grouped_index.items():
-            user_seq[uid] = item_list[index]
-            time_seq[uid] = timestamp_list[index]
-
-        self.user_seq = user_seq
-        self.time_seq = time_seq
 
         while self.inter_feat['timestamp'].max() > 10**10:
             self.inter_feat['timestamp'] = self.inter_feat['timestamp'] // 10**3
@@ -125,7 +113,7 @@ class Data:
 
         # Filter out users if train_timestamp_start is set
         if self.config['train_timestamp_start']:
-            self.logger.info(f"Filtering out users with last interaction before {self.config['train_timestamp_start']}")
+            self.logger.info(f"Filtering out users with last interaction before {self.config['train_timestamp_start']}, {len(self.inter_feat) = }")
             user_last_timestamp = self.inter_feat.groupby('user_id')["timestamp"].agg("max")
             self.logger.info(f"Users before filtering: {len(user_last_timestamp)}")
             valid_users = user_last_timestamp[user_last_timestamp >= self.config['train_timestamp_start']].index
@@ -138,6 +126,17 @@ class Data:
         item_list = self.inter_feat['item_id'].values
         timestamp_list = self.inter_feat['timestamp'].values
         grouped_index = self._grouped_index(user_list)
+        print(f"{len(grouped_index) = }")
+        # Evaluation
+        user_seq = {}
+        time_seq = {}
+        for uid, index in grouped_index.items():
+            user_seq[uid] = item_list[index]
+            time_seq[uid] = timestamp_list[index]
+
+        self.user_seq = user_seq
+        self.time_seq = time_seq
+
         # Training
         train_feat = dict()
         indices = []

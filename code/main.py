@@ -23,9 +23,11 @@ if __name__ == '__main__':
     args, unknown_args = parser.parse_known_args()
     config_file = args.config_file
 
+
+    device_id = os.environ.get("CUDA_VISIBLE_DEVICES", "0")
     if len(config_file) == 2:
-        run_yaml = f"../TORCHRUN run.py --config_file {config_file[0]} {config_file[1]} {' '.join(unknown_args)}"
+        run_yaml = f"CUDA_VISIBLE_DEVICES={device_id} ../TORCHRUN run.py --config_file {config_file[0]} {config_file[1]} {' '.join(unknown_args)}"
     elif len(config_file) == 1:
-        run_yaml = f"../TORCHRUN run.py --config_file {config_file[0]} {' '.join(unknown_args)}"
+        run_yaml = f"CUDA_VISIBLE_DEVICES={device_id} ../TORCHRUN run.py --config_file {config_file[0]} {' '.join(unknown_args)}"
 
     os.system(run_yaml)
