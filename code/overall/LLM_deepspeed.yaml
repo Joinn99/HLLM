@@ -36,9 +36,9 @@ scheduler_args: {
 
 # eval settings
 eval_batch_size: 256
-topk: [5,10,50,200]
-metrics: ['Recall', 'NDCG']
-valid_metric: NDCG@200
+topk: [10,20,50]
+metrics: ['Recall', 'NDCG', 'MRR']
+valid_metric: Recall@50
 metric_decimal_place: 7
 eval_step: 1 
 stopping_step: 5
