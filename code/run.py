@@ -17,6 +17,7 @@ from REC.config import Config
 from REC.utils import init_logger, get_model, init_seed, set_color
 from REC.trainer import Trainer
 import torch.distributed as dist
+from safetensors.torch import save_file, load_file
 
 import os
 import numpy as np
@@ -100,8 +101,8 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
     logger.info(model)
 
     if config['val_only']:
-        ckpt_path = os.path.join(config['checkpoint_dir'], 'pytorch_model.bin')
-        ckpt = torch.load(ckpt_path, map_location='cpu')
+        ckpt_path = os.path.join(config['checkpoint_dir'], 'model.safetensors')
+        ckpt = load_file(ckpt_path, device='cpu')
         logger.info(f'Eval only model load from {ckpt_path}')
         msg = trainer.model.load_state_dict(ckpt, False)
         logger.info(f'{msg.unexpected_keys = }')
@@ -120,6 +121,9 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
 
         logger.info(set_color('best valid ', 'yellow') + f': {best_valid_result}')
         logger.info(set_color('test result', 'yellow') + f': {test_result}')
+
+        trainer.model.to(torch.bfloat16)
+        save_file(trainer.model.state_dict(), os.path.join(config['checkpoint_dir'], 'model.safetensors'))
 
         return {
             'best_valid_score': best_valid_score,
