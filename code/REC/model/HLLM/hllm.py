@@ -74,7 +74,13 @@ class HLLM(BaseModel):
             raise NotImplementedError(f"Only nce is supported")
 
         if config['load_pretrain']:
-            state_dict = torch.load(config['load_pretrain'], map_location="cpu")
+            try:
+                state_dict = torch.load(config['load_pretrain'], map_location="cpu")
+            except Exception as e:
+                from safetensors.torch import load_file
+                state_dict = load_file(config['load_pretrain'], device='cpu')
+                self.logger.info(f"load_pretrain {config['load_pretrain']} failed: {e}")
+                return
             msg = self.load_state_dict(state_dict, strict=False)
             self.logger.info(f"{msg.missing_keys = }")
             self.logger.info(f"{msg.unexpected_keys = }")

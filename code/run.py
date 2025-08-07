@@ -21,10 +21,11 @@ from safetensors.torch import save_file, load_file
 
 import os
 import numpy as np
+import pandas as pd
 import argparse
 import torch.distributed as dist
 import torch
-
+from datetime import datetime, timezone, timedelta
 
 def convert_str(s):
     try:
@@ -88,7 +89,7 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
     print(f"{len(valid_loader) = }")
     print(f"{len(test_loader) = }")
 
-
+    json.dump(config.final_config_dict, open("config.json", "w"), indent=4)
     model = get_model(config['model'])(config, dataload)
     # model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model).to(device)
 
@@ -109,8 +110,29 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
         logger.info(f'{msg.missing_keys = }')
         test_result = trainer.evaluate(test_loader, load_best_model=False, show_progress=config['show_progress'], init_model=True)
         logger.info(set_color('test result', 'yellow') + f': {test_result}')
+        test_result = dict(test_result)
+        test_result.update({
+            "domain": config['domain'], "split": config['split'], "mode": "hllm", 
+            "time": datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")})
+        test_result = pd.DataFrame([test_result])
+        test_result = test_result[['ndcg@10','recall@10','mrr@10','ndcg@20',\
+            'recall@20','mrr@20','ndcg@50','recall@50','mrr@50','domain','split','mode','time']]
+        if config['save_result_path']:
+            if not os.path.exists(config['save_result_path']):
+                test_result.to_csv(config['save_result_path'], index=False)
+            else:
+                test_result.to_csv(config['save_result_path'], index=False, mode='a', header=False)
+        logger.info(f'Test result saved to {config["save_result_path"]}')
+
     else:
         # training process
+        if config['resume_checkpoint_dir']:
+            ckpt_path = os.path.join(config['resume_checkpoint_dir'], 'model.safetensors')
+            ckpt = load_file(ckpt_path, device='cpu')
+            logger.info(f'Resume model load from {ckpt_path}')
+            msg = trainer.model.load_state_dict(ckpt, False)
+            logger.info(f'{msg.unexpected_keys = }')
+            logger.info(f'{msg.missing_keys = }')
         best_valid_score, best_valid_result = trainer.fit(
             train_loader, valid_loader, saved=saved, show_progress=config['show_progress']
         )
