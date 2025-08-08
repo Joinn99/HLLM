@@ -110,9 +110,11 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
         test_result = trainer.evaluate(test_loader, load_best_model=False, show_progress=config['show_progress'], init_model=True)
         logger.info(set_color('test result', 'yellow') + f': {test_result}')
         test_result = dict(test_result)
+        eval_name = config['eval_name'] if 'eval_name' in config else f"{config['domain']}-{config['split']}-{config['mode']}"
         test_result.update({
-            "domain": config['domain'], "split": config['split'], "mode": "hllm", 
-            "time": datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")})
+            "time": datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S"),
+            "mode": "hllm", "split": config['split'], "domain": config['domain'], "name": eval_name 
+        })
         test_result = pd.DataFrame([test_result])
         test_result = test_result[['ndcg@10','recall@10','mrr@10','ndcg@20',\
             'recall@20','mrr@20','ndcg@50','recall@50','mrr@50','domain','split','mode','time']]
