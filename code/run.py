@@ -89,7 +89,6 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
     print(f"{len(valid_loader) = }")
     print(f"{len(test_loader) = }")
 
-    json.dump(config.final_config_dict, open("config.json", "w"), indent=4)
     model = get_model(config['model'])(config, dataload)
     # model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model).to(device)
 
