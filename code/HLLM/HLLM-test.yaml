@@ -1,9 +1,14 @@
 model: HLLM
-item_pretrain_dir: item_pretrain_dir # Item and User LLM are initialized by pretrain_dir
-item_llm_init: True
-user_pretrain_dir: user_pretrain_dir
-user_llm_init: True
+item_pretrain_dir: ${data}/zoo/Qwen3-0.6B # Item and User LLM are initialized by pretrain_dir
+item_llm_init: False
+user_pretrain_dir: ${data}/zoo/Qwen3-0.6B
+user_llm_init: False
 use_ft_flash_attn: True
 
 train_timestamp_start: 1672531200 # 2023-01-01
 eval_timestamp_start: 1680307200 # 2023-04-01
+
+save_result_path:  /data/tjwei/GR/data/archive/amazon.csv
+
+val_only: True
+resume_checkpoint_dir: ${data}/Common/GenRec/${EVAL_NAME}

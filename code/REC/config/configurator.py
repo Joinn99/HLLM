@@ -46,6 +46,62 @@ class Config(object):
         )
         return loader
 
+    def _substitute_env_vars(self, text):
+        """
+        Substitute environment variables in text.
+        Supports ${VAR} and ${VAR:-default} syntax.
+        
+        Args:
+            text (str): Text potentially containing environment variables
+            
+        Returns:
+            str: Text with environment variables substituted
+        """
+        if not isinstance(text, str):
+            return text
+            
+        # Pattern to match ${VAR} or ${VAR:-default}
+        pattern = r'\$\{([^}:]+)(?::(-?)([^}]*))?\}'
+        
+        def replace_var(match):
+            var_name = match.group(1)
+            has_default = match.group(2) is not None
+            default_value = match.group(3) if has_default else None
+            
+            # Get environment variable value
+            env_value = os.environ.get(var_name)
+            
+            if env_value is not None:
+                return env_value
+            elif has_default:
+                return default_value if default_value is not None else ""
+            else:
+                # If no default provided and env var not found, keep original
+                logger = getLogger()
+                logger.warning(f"Environment variable '{var_name}' not found and no default provided. Keeping original: {match.group(0)}")
+                return match.group(0)
+        
+        return re.sub(pattern, replace_var, text)
+
+    def _substitute_env_vars_recursive(self, obj):
+        """
+        Recursively substitute environment variables in nested dictionaries and lists.
+        
+        Args:
+            obj: Dictionary, list, or string to process
+            
+        Returns:
+            Processed object with environment variables substituted
+        """
+        if isinstance(obj, dict):
+            return {key: self._substitute_env_vars_recursive(value) for key, value in obj.items()}
+        elif isinstance(obj, list):
+            return [self._substitute_env_vars_recursive(item) for item in obj]
+        elif isinstance(obj, str):
+            return self._substitute_env_vars(obj)
+        else:
+            return obj
+
     def _convert_config_dict(self, config_dict):
         r"""This function convert the str parameters to their original type.
 
@@ -76,7 +132,13 @@ class Config(object):
         if file_list:
             for file in file_list:
                 with open(file, 'r', encoding='utf-8') as f:
-                    file_config_dict.update(yaml.load(f.read(), Loader=self.yaml_loader))
+                    file_content = f.read()
+                    # Substitute environment variables in the YAML content before parsing
+                    file_content = self._substitute_env_vars(file_content)
+                    config_dict = yaml.load(file_content, Loader=self.yaml_loader)
+                    # Apply recursive substitution to handle any remaining variables in values
+                    config_dict = self._substitute_env_vars_recursive(config_dict)
+                    file_config_dict.update(config_dict)
         return file_config_dict
 
     def _load_variable_config_dict(self, config_dict):
