@@ -56,3 +56,6 @@ num_negatives: 512
 
 text_path: ${data}/tjwei/GR/data/information
 checkpoint_dir: ${data}/Common/GenRec/${DOMAIN}-${SPLIT}
+
+domain: ${DOMAIN}
+split: ${SPLIT}

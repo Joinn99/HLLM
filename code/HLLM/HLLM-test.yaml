@@ -8,7 +8,8 @@ use_ft_flash_attn: True
 train_timestamp_start: 1672531200 # 2023-01-01
 eval_timestamp_start: 1680307200 # 2023-04-01
 
-save_result_path:  /data/tjwei/GR/data/archive/amazon.csv
+save_result_path:  ${data}/tjwei/GR/data/archive/amazon.tsv
 
 val_only: True
-resume_checkpoint_dir: ${data}/Common/GenRec/${EVAL_NAME}
+checkpoint_dir: ${data}/Common/GenRec/
+eval_name: ${EVAL_NAME}

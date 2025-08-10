@@ -101,7 +101,8 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
     logger.info(model)
 
     if config['val_only']:
-        ckpt_path = os.path.join(config['checkpoint_dir'], 'model.safetensors')
+        eval_name = config['eval_name'] if 'eval_name' in config else f"{config['domain']}-{config['split']}"
+        ckpt_path = os.path.join(config['checkpoint_dir'], eval_name,'model.safetensors')
         ckpt = load_file(ckpt_path, device='cpu')
         logger.info(f'Eval only model load from {ckpt_path}')
         msg = trainer.model.load_state_dict(ckpt, False)
@@ -110,19 +111,21 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
         test_result = trainer.evaluate(test_loader, load_best_model=False, show_progress=config['show_progress'], init_model=True)
         logger.info(set_color('test result', 'yellow') + f': {test_result}')
         test_result = dict(test_result)
-        eval_name = config['eval_name'] if 'eval_name' in config else f"{config['domain']}-{config['split']}-{config['mode']}"
+        for k, v in test_result.items():
+            if isinstance(v, float):
+                test_result[k] = round(100 * v, 7)
         test_result.update({
             "time": datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S"),
             "mode": "hllm", "split": config['split'], "domain": config['domain'], "name": eval_name 
         })
         test_result = pd.DataFrame([test_result])
         test_result = test_result[['ndcg@10','recall@10','mrr@10','ndcg@20',\
-            'recall@20','mrr@20','ndcg@50','recall@50','mrr@50','domain','split','mode','time']]
+            'recall@20','mrr@20','ndcg@50','recall@50','mrr@50','time','mode','split','domain','name']]
         if config['save_result_path']:
             if not os.path.exists(config['save_result_path']):
-                test_result.to_csv(config['save_result_path'], index=False)
+                test_result.to_csv(config['save_result_path'], index=False, sep='\t', float_format='%.3f')
             else:
-                test_result.to_csv(config['save_result_path'], index=False, mode='a', header=False)
+                test_result.to_csv(config['save_result_path'], index=False, mode='a', sep='\t', header=False, float_format='%.3f')
         logger.info(f'Test result saved to {config["save_result_path"]}')
 
     else:
