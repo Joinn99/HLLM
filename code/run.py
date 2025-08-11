@@ -101,7 +101,7 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
     logger.info(model)
 
     if config['val_only']:
-        eval_name = config['eval_name'] if 'eval_name' in config else f"{config['domain']}-{config['split']}"
+        eval_name = config['eval_name'] if 'eval_name' in config else f"{config['domain']}-{config['split']}-hllm"
         ckpt_path = os.path.join(config['checkpoint_dir'], eval_name,'model.safetensors')
         ckpt = load_file(ckpt_path, device='cpu')
         logger.info(f'Eval only model load from {ckpt_path}')
