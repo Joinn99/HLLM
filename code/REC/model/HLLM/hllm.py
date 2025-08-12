@@ -73,11 +73,10 @@ class HLLM(BaseModel):
         else:
             raise NotImplementedError(f"Only nce is supported")
 
-        print("Before loading checkpoint")
         from safetensors.torch import load_file
         if config['load_pretrain']:
             ckpt = load_file(config['load_pretrain'], device='cpu')
-        self.load_state_dict(ckpt, strict=True)
+            self.load_state_dict(ckpt, strict=True)
 
     def create_llm(self, pretrain_dir, init=True):
         self.logger.info(f"******* create LLM {pretrain_dir} *******")
