@@ -101,8 +101,13 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
     logger.info(model)
 
     if config['val_only']:
-        eval_name = config['eval_name'] if 'eval_name' in config else f"{config['domain']}-{config['split']}-hllm"
-        ckpt_path = os.path.join(config['checkpoint_dir'], eval_name,'model.safetensors')
+        if 'eval_name' in config and config['eval_name']:
+            eval_name = config['eval_name']
+            ckpt_path = os.path.join(config['checkpoint_dir'], eval_name, 'model.safetensors')
+        else:
+            eval_name = f"{config['domain']}-{config['split']}-hllm"
+            ckpt_path = os.path.join(config['checkpoint_dir'], f"{config['domain']}-{config['split']}", 'model.safetensors')
+        
         ckpt = load_file(ckpt_path, device='cpu')
         logger.info(f'Eval only model load from {ckpt_path}')
         msg = trainer.model.load_state_dict(ckpt, False)
@@ -119,8 +124,8 @@ def run_loop(local_rank, config_file=None, saved=True, extra_args=[]):
             "mode": "hllm", "split": config['split'], "domain": config['domain'], "name": eval_name 
         })
         test_result = pd.DataFrame([test_result])
-        test_result = test_result[['ndcg@10','recall@10','mrr@10','ndcg@20',\
-            'recall@20','mrr@20','ndcg@50','recall@50','mrr@50','time','mode','split','domain','name']]
+        test_result = test_result[['ndcg@5','recall@5','mrr@5','ndcg@10','recall@10','mrr@10','ndcg@20',\
+            'recall@20','mrr@20','time','mode','split','domain','name']]
         if config['save_result_path']:
             if not os.path.exists(config['save_result_path']):
                 test_result.to_csv(config['save_result_path'], index=False, sep='\t', float_format='%.3f')
