@@ -8,7 +8,6 @@ show_progress: True
 
 log_wandb: False
 wandb_project: 'REC'
-MAX_ITEM_LIST_LENGTH: 50
 MAX_TEXT_LENGTH: 64
 
 data_path: ${data}/tjwei/GR/data/dataset                      # dataset path
